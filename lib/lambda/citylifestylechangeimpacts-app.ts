@@ -1,4 +1,6 @@
-const AWS = require('aws-sdk')
+const { DynamoDBDocument } = require("@aws-sdk/lib-dynamodb");
+const { DynamoDB } = require("@aws-sdk/client-dynamodb");
+
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware')
 const bodyParser = require('body-parser')
 import express from 'express'
@@ -20,7 +22,7 @@ const toComponent = (item: any) => {
 let dynamoParam = {}
 let tableName = TABLE_NAME
 
-const dynamodb = new AWS.DynamoDB.DocumentClient(dynamoParam)
+const dynamodb = DynamoDBDocument.from(new DynamoDB(dynamoParam))
 
 const path = '/changeImpacts'
 
@@ -60,7 +62,7 @@ app.get(path + '/:type', async (req: express.Request, res: express.Response) => 
   };
 
     try {
-      const data = await dynamodb.query(params).promise()
+      const data = await dynamodb.query(params)
       response = response.concat(
         data.Items.map((item: any) => toComponent(item))
       )
@@ -100,7 +102,7 @@ app.get(path + '/:type/:city_name', async (req, res) => {
   };
 
   try {
-    const data = await dynamodb.query(params).promise()
+    const data = await dynamodb.query(params)
     res.json(data.Items.map((item: any) => toComponent(item)))
   } catch (err) {
     res.statusCode = 500
@@ -136,7 +138,7 @@ app.get(path + '/:type/:city_name/:domain', async (req, res) => {
 
 
   try {
-    const data = await dynamodb.query(params).promise()
+    const data = await dynamodb.query(params)
     res.json(data.Items.map((item: any) => toComponent(item)))
   } catch (err) {
     res.statusCode = 500
@@ -175,7 +177,7 @@ app.get(path + '/:type/:city_name/:domain/:group', async (req, res) => {
 
 
   try {
-    const data = await dynamodb.query(params).promise()
+    const data = await dynamodb.query(params)
     res.json(data.Items.map((item: any) => toComponent(item)))
   } catch (err) {
     res.statusCode = 500
@@ -219,7 +221,7 @@ app.get(path + '/:type/:city_name/:domain/:group/:options', async (req, res) => 
 
 
   try {
-    const data = await dynamodb.query(params).promise()
+    const data = await dynamodb.query(params)
     res.json(data.Items.map((item: any) => toComponent(item)))
   } catch (err) {
     res.statusCode = 500

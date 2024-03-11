@@ -6,7 +6,7 @@ from uuid import uuid4
 # DynamoDBへの接続設定
 my_session = boto3.Session(profile_name='footprint')
 dynamodb = my_session.resource('dynamodb', region_name='ap-northeast-1')
-footprint_table = dynamodb.Table('devJibungotoPlanet-Apifootprint')
+footprint_table = dynamodb.Table('devJibungotoPlanet-ApilocalFootprint')
 change_impact_table = dynamodb.Table('devJibungotoPlanet-ApichangeImpact')
 
 # CSVファイルの読み込み

@@ -8,6 +8,7 @@ import { ChangeImpactStack } from "../lib/change-impact-stack";
 import { ApiGatewayStack } from "../lib/api-gateway-stack";
 import { Tags } from "aws-cdk-lib";
 import { Route53Stack } from "../lib/route53";
+import { CalculateStack } from "../lib/calculate-stack";
 
 const app = new cdk.App();
 const stages = ['dev', 'public']
@@ -35,7 +36,7 @@ const footprintLambda = new FootprintStack(app, `${ stage }${ serviceName }Footp
   stage,
   env,
   serviceName,
-  dynamoTable: dynamoDB.footprintTable
+  dynamoTable: dynamoDB.localFootprintTable
 })
 footprintLambda.addDependency(dynamoDB)
 
@@ -47,6 +48,16 @@ const changeImpactLambda = new ChangeImpactStack(app, `${ stage }${ serviceName 
 })
 footprintLambda.addDependency(dynamoDB)
 
+const calculateLambda = new CalculateStack(app, `${ stage }${ serviceName }CalculateStack`, {
+  stage,
+  env,
+  serviceName,
+  footprintTable: dynamoDB.footprintTable,
+  profileTable: dynamoDB.profileTable,
+  parameterTable: dynamoDB.parameterTable,
+})
+footprintLambda.addDependency(dynamoDB)
+
 const apiGateway = new ApiGatewayStack(app, `${ stage }${ serviceName }ApiGatewayStack`, {
   stage,
   env,
@@ -55,9 +66,11 @@ const apiGateway = new ApiGatewayStack(app, `${ stage }${ serviceName }ApiGatewa
   certificateArn: config.certificateArn,
   footprintLambda: footprintLambda.lambda,
   changeImpactLambda: changeImpactLambda.lambda,
+  calculateLambda: calculateLambda.lambda
 })
 apiGateway.addDependency(footprintLambda)
 apiGateway.addDependency(changeImpactLambda)
+apiGateway.addDependency(calculateLambda)
 
 const route53 = new Route53Stack(app, `${ stage }${ serviceName }Route53Stack`, {
   stage,

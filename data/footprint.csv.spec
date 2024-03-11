@@ -1,0 +1,9 @@
+[CSV_SPEC]
+dir_domain=S
+item_type=S
+subdomain=S
+value=D
+unit=S
+citation=S
+createdAt=S
+updatedAt=S

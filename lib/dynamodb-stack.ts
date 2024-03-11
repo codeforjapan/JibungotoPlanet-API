@@ -5,8 +5,11 @@ import { Construct } from 'constructs'
 import { BaseStackProps } from './props'
 
 export class DynamodbStack extends Stack {
-  public readonly footprintTable: aws_dynamodb.Table
+  public readonly localFootprintTable: aws_dynamodb.Table
   public readonly changeImpactTable: aws_dynamodb.Table
+  public readonly profileTable: aws_dynamodb.Table
+  public readonly footprintTable: aws_dynamodb.Table
+  public readonly parameterTable: aws_dynamodb.Table
 
   constructor(scope: Construct, id: string, props: BaseStackProps) {
     super(scope, id, props)
@@ -20,6 +23,32 @@ export class DynamodbStack extends Stack {
 
     const tableObjects: TableObjects = {
       footprint: {
+        partitionKey: {
+          name: 'dir_domain',
+          type: AttributeType.STRING
+        },
+        sortKey: {
+          name: 'item_type',
+          type: AttributeType.STRING
+        }
+      },
+      profile: {
+        partitionKey: {
+          name: 'id',
+          type: AttributeType.STRING
+        }
+      },
+      parameter: {
+        partitionKey: {
+          name: 'category',
+          type: AttributeType.STRING
+        },
+        sortKey: {
+          name: 'key',
+          type: AttributeType.STRING
+        }
+      },
+      localFootprint: {
         partitionKey: {
           name: 'Type',
           type: AttributeType.STRING
@@ -54,21 +83,35 @@ export class DynamodbStack extends Stack {
           billingMode: aws_dynamodb.BillingMode.PAY_PER_REQUEST
         }
       )
-
-      // @ts-ignore
-      this[`${key}Table`].addGlobalSecondaryIndex(
-        {
-          indexName: 'CityName-Domain-index',
-          partitionKey: {
-            name: 'CityName',
-            type: AttributeType.STRING
-          },
-          sortKey: {
-            name: 'Domain',
-            type: AttributeType.STRING
-          }
-        }
-      )
     }
+
+
+    this.localFootprintTable.addGlobalSecondaryIndex(
+      {
+        indexName: 'CityName-Domain-index',
+        partitionKey: {
+          name: 'CityName',
+          type: AttributeType.STRING
+        },
+        sortKey: {
+          name: 'Domain',
+          type: AttributeType.STRING
+        }
+      }
+    )
+
+    this.changeImpactTable.addGlobalSecondaryIndex(
+      {
+        indexName: 'CityName-Domain-index',
+        partitionKey: {
+          name: 'CityName',
+          type: AttributeType.STRING
+        },
+        sortKey: {
+          name: 'Domain',
+          type: AttributeType.STRING
+        }
+      }
+    )
   }
 }

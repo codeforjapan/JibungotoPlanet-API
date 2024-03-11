@@ -18,6 +18,7 @@ export interface ApiGatewayStackProps extends BaseStackProps {
   certificateArn: string
   footprintLambda: IFunction
   changeImpactLambda: IFunction
+  calculateLambda: IFunction
 }
 
 export class ApiGatewayStack extends Stack {
@@ -60,8 +61,12 @@ export class ApiGatewayStack extends Stack {
     const changeImpactGroup = changeImpactDomain.addResource('{group}')
     const changeImpactOption = changeImpactGroup.addResource('{options}')
 
+    const calculate = apiGateway.root.addResource('calculates')
+    const calculateId = calculate.addResource('{id}')
+
     const footprintIntegration = new LambdaIntegration(props.footprintLambda)
     const changeImpactIntegration = new LambdaIntegration(props.changeImpactLambda)
+    const calculateIntegration = new LambdaIntegration(props.calculateLambda)
 
     footprintType.addMethod('GET', footprintIntegration)
     footprintCityName.addMethod('GET', footprintIntegration)
@@ -73,6 +78,10 @@ export class ApiGatewayStack extends Stack {
     changeImpactDomain.addMethod('GET', changeImpactIntegration)
     changeImpactGroup.addMethod('GET', changeImpactIntegration)
     changeImpactOption.addMethod('GET', changeImpactIntegration)
+
+    calculate.addMethod('POST', calculateIntegration)
+    calculateId.addMethod('GET', calculateIntegration)
+    calculateId.addMethod('PUT', calculateIntegration)
 
     const domain = new DomainName(
       this,
