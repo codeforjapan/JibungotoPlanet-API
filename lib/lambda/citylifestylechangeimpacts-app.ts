@@ -48,28 +48,28 @@ app.use(function (
 
 app.get(path + '/:type', async (req: express.Request, res: express.Response) => {
   const type = req.params.type
-  let response: any[] = []
+  let response: any[] = [{ source: 'https://lifestyle.nies.go.jp' }]
 
   const params = {
     TableName: tableName,
     KeyConditionExpression: '#type = :typeValue',
     ExpressionAttributeNames: {
-        '#type': 'Type',
+      '#type': 'Type',
     },
     ExpressionAttributeValues: {
-        ':typeValue': type,
+      ':typeValue': type,
     }
   };
 
-    try {
-      const data = await dynamodb.query(params)
-      response = response.concat(
-        data.Items.map((item: any) => toComponent(item))
-      )
-    } catch (err) {
-      res.statusCode = 500
-      res.json({ error: 'Could not load type: ' + err })
-    }
+  try {
+    const data = await dynamodb.query(params)
+    response = response.concat(
+      data.Items.map((item: any) => toComponent(item))
+    )
+  } catch (err) {
+    res.statusCode = 500
+    res.json({ error: 'Could not load type: ' + err })
+  }
 
 
   if (res.statusCode !== 500) {
@@ -92,18 +92,19 @@ app.get(path + '/:type/:city_name', async (req, res) => {
     KeyConditionExpression: "#city_name = :city_nameValue",
     FilterExpression: "#type = :typeValue",
     ExpressionAttributeNames: {
-        "#city_name": "CityName",
-        "#type": "Type",
+      "#city_name": "CityName",
+      "#type": "Type",
     },
     ExpressionAttributeValues: {
-        ":city_nameValue": city_name,
-        ":typeValue": type,
+      ":city_nameValue": city_name,
+      ":typeValue": type,
     }
   };
 
   try {
     const data = await dynamodb.query(params)
-    res.json(data.Items.map((item: any) => toComponent(item)))
+    res.json(data.Items.map((item: any) => toComponent(item))
+      .concat([{ source: 'https://lifestyle.nies.go.jp' }]))
   } catch (err) {
     res.statusCode = 500
     res.json({ error: 'Could not load city_name: ' + err })
@@ -120,26 +121,27 @@ app.get(path + '/:type/:city_name/:domain', async (req, res) => {
   const domain = req.params.domain
 
   const params = {
-      TableName: tableName,
-      IndexName: 'CityName-Domain-index',
-      KeyConditionExpression: "#city_name = :city_nameValue and #domain = :domainValue",
-      FilterExpression: "#type = :typeValue",
-      ExpressionAttributeNames: {
-          "#city_name": "CityName",
-          "#domain": "Domain",
-          "#type": "Type",
-      },
-      ExpressionAttributeValues: {
-          ":city_nameValue": city_name,
-          ":domainValue": domain,
-          ":typeValue": type,
-      }
+    TableName: tableName,
+    IndexName: 'CityName-Domain-index',
+    KeyConditionExpression: "#city_name = :city_nameValue and #domain = :domainValue",
+    FilterExpression: "#type = :typeValue",
+    ExpressionAttributeNames: {
+      "#city_name": "CityName",
+      "#domain": "Domain",
+      "#type": "Type",
+    },
+    ExpressionAttributeValues: {
+      ":city_nameValue": city_name,
+      ":domainValue": domain,
+      ":typeValue": type,
+    }
   };
 
 
   try {
     const data = await dynamodb.query(params)
-    res.json(data.Items.map((item: any) => toComponent(item)))
+    res.json(data.Items.map((item: any) => toComponent(item))
+      .concat([{ source: 'https://lifestyle.nies.go.jp' }]))
   } catch (err) {
     res.statusCode = 500
     res.json({ error: 'Could not load domain: ' + err })
@@ -157,34 +159,34 @@ app.get(path + '/:type/:city_name/:domain/:group', async (req, res) => {
   const group = req.params.group
 
   const params = {
-      TableName: tableName,
-      IndexName: 'CityName-Domain-index',
-      KeyConditionExpression: "#city_name = :city_nameValue and #domain = :domainValue",
-      FilterExpression: "#type = :typeValue and #group = :groupValue",
-      ExpressionAttributeNames: {
-          "#city_name": "CityName",
-          "#domain": "Domain",
-          "#type": "Type",
-          "#group": "Group",
-      },
-      ExpressionAttributeValues: {
-          ":city_nameValue": city_name,
-          ":domainValue": domain,
-          ":typeValue": type,
-          ":groupValue": group
-      }
+    TableName: tableName,
+    IndexName: 'CityName-Domain-index',
+    KeyConditionExpression: "#city_name = :city_nameValue and #domain = :domainValue",
+    FilterExpression: "#type = :typeValue and #group = :groupValue",
+    ExpressionAttributeNames: {
+      "#city_name": "CityName",
+      "#domain": "Domain",
+      "#type": "Type",
+      "#group": "Group",
+    },
+    ExpressionAttributeValues: {
+      ":city_nameValue": city_name,
+      ":domainValue": domain,
+      ":typeValue": type,
+      ":groupValue": group
+    }
   };
 
 
   try {
     const data = await dynamodb.query(params)
-    res.json(data.Items.map((item: any) => toComponent(item)))
+    res.json(data.Items.map((item: any) => toComponent(item))
+      .concat([{ source: 'https://lifestyle.nies.go.jp' }]))
   } catch (err) {
     res.statusCode = 500
     res.json({ error: 'Could not load group: ' + err })
   }
 })
-
 
 
 /*****************************************
@@ -199,30 +201,31 @@ app.get(path + '/:type/:city_name/:domain/:group/:options', async (req, res) => 
   const options = req.params.options
 
   const params = {
-      TableName: tableName,
-      IndexName: 'CityName-Domain-index',
-      KeyConditionExpression: "#city_name = :city_nameValue and #domain = :domainValue",
-      FilterExpression: "#type = :typeValue and #group = :groupValue and #options = :optionsValue",
-      ExpressionAttributeNames: {
-          "#city_name": "CityName",
-          "#domain": "Domain",
-          "#type": "Type",
-          "#group": "Group",
-          "#options": "Options",
-      },
-      ExpressionAttributeValues: {
-          ":city_nameValue": city_name,
-          ":domainValue": domain,
-          ":typeValue": type,
-          ":groupValue": group,
-          ":optionsValue": options
-      }
+    TableName: tableName,
+    IndexName: 'CityName-Domain-index',
+    KeyConditionExpression: "#city_name = :city_nameValue and #domain = :domainValue",
+    FilterExpression: "#type = :typeValue and #group = :groupValue and #options = :optionsValue",
+    ExpressionAttributeNames: {
+      "#city_name": "CityName",
+      "#domain": "Domain",
+      "#type": "Type",
+      "#group": "Group",
+      "#options": "Options",
+    },
+    ExpressionAttributeValues: {
+      ":city_nameValue": city_name,
+      ":domainValue": domain,
+      ":typeValue": type,
+      ":groupValue": group,
+      ":optionsValue": options
+    }
   };
 
 
   try {
     const data = await dynamodb.query(params)
-    res.json(data.Items.map((item: any) => toComponent(item)))
+    res.json(data.Items.map((item: any) => toComponent(item))
+      .concat([{ source: 'https://lifestyle.nies.go.jp' }]))
   } catch (err) {
     res.statusCode = 500
     res.json({ error: 'Could not load options: ' + err })

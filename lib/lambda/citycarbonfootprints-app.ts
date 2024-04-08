@@ -50,7 +50,7 @@ app.use(function (
 
 app.get(path + '/:type', async (req: express.Request, res: express.Response) => {
   const type = req.params.type
-  let response: any[] = []
+  let response: any[] = [{ source: 'https://lifestyle.nies.go.jp' }]
 
   const params = {
     TableName: tableName,
@@ -105,7 +105,8 @@ app.get(path + '/:type/:city_name', async (req, res) => {
 
   try {
     const data = await dynamodb.query(params)
-    res.json(data.Items.map((item: any) => toComponent(item)))
+    res.json(data.Items.map((item: any) => toComponent(item))
+      .concat([{ source: 'https://lifestyle.nies.go.jp' }]))
   } catch (err) {
     res.statusCode = 500
     res.json({ error: 'Could not load city_name ' + err })
@@ -141,7 +142,8 @@ app.get(path + '/:type/:city_name/:domain', async (req, res) => {
 
   try {
     const data = await dynamodb.query(params)
-    res.json(data.Items.map((item: any) => toComponent(item)))
+    res.json(data.Items.map((item: any) => toComponent(item))
+      .concat([{ source: 'https://lifestyle.nies.go.jp' }]))
   } catch (err) {
     res.statusCode = 500
     res.json({ error: 'Could not load domain: ' + err })
@@ -181,7 +183,8 @@ app.get(path + '/:type/:city_name/:domain/:component', async (req, res) => {
 
   try {
     const data = await dynamodb.query(params)
-    res.json(data.Items.map((item: any) => toComponent(item)))
+    res.json(data.Items.map((item: any) => toComponent(item))
+      .concat([{ source: 'https://lifestyle.nies.go.jp' }]))
   } catch (err) {
     res.statusCode = 500
     res.json({ error: 'Could not load component: ' + err })
