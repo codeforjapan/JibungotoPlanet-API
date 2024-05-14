@@ -11,6 +11,7 @@ const awsServerlessExpressMiddleware = require('aws-serverless-express/middlewar
 const bodyParser = require('body-parser')
 const { v4: uuid } = require('uuid')
 import express from 'express'
+import {EmissionCalculator} from "../../utils/emission";
 
 const FOOTPRINT_TABLE_NAME = process.env.FOOTPRINT_TABLE_NAME || ''
 const PARAMETER_TABLE_NAME = process.env.PARAMETER_TABLE_NAME || ''
@@ -56,6 +57,10 @@ const toResponse = (profile: any, estimate: any) => {
         ...common,
         baselines: profile.baselines,
         estimations: profile.estimations,
+        mobilityScore: profile.mobility,
+        foodScore: profile.food,
+        housingScore: profile.housing,
+        otherScore: profile.other,
       }
     : common
 }
@@ -85,12 +90,22 @@ app.get(path + '/:id', async (req: express.Request, res: express.Response) => {
         })
     }
 
+    await addScore(profile)
+
     res.json(toResponse(profile, true))
   } catch (err) {
     res.statusCode = 500
     res.json({ error: 'Could not load item: ' + err })
   }
 })
+
+const addScore = async (profile: any) => {
+  const emissionCalculator = new EmissionCalculator(profile);
+  profile.mobility = emissionCalculator.mobility
+  profile.food = emissionCalculator.food
+  profile.housing = emissionCalculator.housing
+  profile.other = emissionCalculator.other
+}
 
 const updateProfile = async (dynamodb: any, profile: any) => {
   profile.baselines = []
@@ -188,6 +203,8 @@ app.put(path + '/:id', async (req: express.Request, res: express.Response) => {
           TableName: profileTableName,
           Item: profile
         })
+
+      await addScore(profile)
       res.json({
         success: 'put call succeed!',
         url: req.url,
@@ -238,6 +255,7 @@ app.post(path, async (req: express.Request, res: express.Response) => {
         Item: profile
       }
       await dynamodb.put(params)
+      await addScore(profile)
       res.json({
         success: 'post call succeed!',
         url: req.url,
