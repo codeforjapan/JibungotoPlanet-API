@@ -65,7 +65,9 @@ export class ApiGatewayStack extends Stack {
     const calculateId = calculate.addResource('{id}')
 
     const footprintIntegration = new LambdaIntegration(props.footprintLambda)
-    const changeImpactIntegration = new LambdaIntegration(props.changeImpactLambda)
+    const changeImpactIntegration = new LambdaIntegration(
+      props.changeImpactLambda
+    )
     const calculateIntegration = new LambdaIntegration(props.calculateLambda)
 
     footprintType.addMethod('GET', footprintIntegration)

@@ -21,7 +21,11 @@
     "typescript": "~5.4.5"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.575.0",
+    "@aws-sdk/lib-dynamodb": "^3.575.0",
     "@types/supertest": "^6.0.2",
+    "@typescript-eslint/eslint-plugin": "^7.9.0",
+    "@typescript-eslint/parser": "^7.9.0",
     "ajv": "^8.13.0",
     "aws-cdk-lib": "2.141.0",
     "aws-sdk": "^2.1618.0",

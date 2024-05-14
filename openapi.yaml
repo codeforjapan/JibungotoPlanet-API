@@ -1,0 +1,857 @@
+openapi: "3.0.1"
+info:
+  title: "JibungotoPlanet-Api"
+  version: "2024-03-11"
+servers:
+  - url: "https://public-api.jibungoto-planet.jp/"
+    description: Production server
+  - url: "https://dev-api.jibungoto-planet.jp/"
+    description: development server
+paths:
+  /footprints/{type}:
+    get:
+      summary: Get a list of carbon footprint data for a specified type.
+      description: >
+        Retrieves a list of carbon footprint entries based on the specified type.
+        Each entry includes detailed data about the carbon footprints in different cities and domains.
+      parameters:
+        - name: type
+          in: path
+          required: true
+          description: The type of data to retrieve, such as City or Region.
+          schema:
+            $ref: '#/components/schemas/Type'
+      responses:
+        "200":
+          description: A successful response containing an array of carbon footprint data entries.
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/CarbonFootprintData'
+                    - $ref: '#/components/schemas/Source'
+  /footprints/{type}/{city_name}:
+    get:
+      summary: Get carbon footprint data for a specified city within a given type.
+      description: >
+        Retrieves detailed carbon footprint data for a specific city within the given type. 
+        This can include multiple entries depending on the city's available data.
+      parameters:
+        - name: "type"
+          in: "path"
+          required: true
+          description: The type of the data, usually 'City'.
+          schema:
+            $ref: '#/components/schemas/Type'
+        - name: "city_name"
+          in: "path"
+          required: true
+          schema:
+            $ref: '#/components/schemas/CityNames'
+      responses:
+        "200":
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/CarbonFootprintData'
+                    - $ref: '#/components/schemas/Source'
+  /footprints/{type}/{city_name}/{domain}:
+    get:
+      summary: Get carbon footprint data for a specific city and domain.
+      description: Retrieves the carbon footprint data for a specific component in a city, based on type, city name, and domain.
+      parameters:
+        - name: "type"
+          in: "path"
+          required: true
+          description: The type of the data, usually 'City'.
+          schema:
+            $ref: '#/components/schemas/Type'
+        - name: "city_name"
+          in: "path"
+          required: true
+          schema:
+            $ref: '#/components/schemas/CityNames'
+        - name: "domain"
+          in: "path"
+          required: true
+          schema:
+            $ref: '#/components/schemas/Domains'
+      responses:
+        "200":
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/CarbonFootprintData'
+                    - $ref: '#/components/schemas/Source'
+        '500':
+          description: Internal server error.
+  /footprints/{type}/{city_name}/{domain}/{component}:
+    get:
+      summary: Get specific carbon footprint data for a city, domain, and component.
+      description: >
+        Retrieves detailed carbon footprint data for a specific city within the given type, domain, and component.
+        This endpoint allows for highly specific data queries.
+      parameters:
+        - name: "type"
+          in: "path"
+          required: true
+          description: The type of the data, usually 'City'.
+          schema:
+            $ref: '#/components/schemas/Type'
+        - name: "city_name"
+          in: "path"
+          required: true
+          schema:
+            $ref: '#/components/schemas/CityNames'
+        - name: "domain"
+          in: "path"
+          required: true
+          schema:
+            $ref: '#/components/schemas/Domains'
+        - name: "component"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/CarbonFootprintData'
+                    - $ref: '#/components/schemas/Source'
+  /changeImpacts/{type}:
+    get:
+      summary: Retrieve data based on type
+      description: Retrieves lifestyle change data based on the specified type.
+      parameters:
+        - name: "type"
+          in: "path"
+          required: true
+          description: The type of the data, usually 'City'.
+          schema:
+            $ref: '#/components/schemas/Type'
+      responses:
+        "200":
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ChangeImpactEntry'
+                    - $ref: '#/components/schemas/Source'
+  /changeImpacts/{type}/{city_name}:
+    get:
+      summary: Retrieve data for a specified type and city
+      description: Retrieves lifestyle change data based on the specified type and city.
+      parameters:
+        - name: "type"
+          in: "path"
+          required: true
+          description: The type of the data, usually 'City'.
+          schema:
+            $ref: '#/components/schemas/Type'
+        - name: "city_name"
+          in: "path"
+          required: true
+          schema:
+            $ref: '#/components/schemas/CityNames'
+      responses:
+        "200":
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ChangeImpactEntry'
+                    - $ref: '#/components/schemas/Source'
+  /changeImpacts/{type}/{city_name}/{domain}:
+    get:
+      summary: Retrieve data based on type, city, and domain
+      description: Retrieves lifestyle change data based on the specified type, city, and domain.
+      parameters:
+        - name: "type"
+          in: "path"
+          required: true
+          description: The type of the data, usually 'City'.
+          schema:
+            $ref: '#/components/schemas/Type'
+        - name: "city_name"
+          in: "path"
+          required: true
+          schema:
+            $ref: '#/components/schemas/CityNames'
+        - name: "domain"
+          in: "path"
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChangeImpactDomains'
+      responses:
+        "200":
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ChangeImpactEntry'
+                    - $ref: '#/components/schemas/Source'
+  /changeImpacts/{type}/{city_name}/{domain}/{group}:
+    get:
+      summary: Retrieve data based on type, city, domain, and group
+      description: Retrieves lifestyle change data based on the specified type, city, domain, and group.
+      parameters:
+        - name: "type"
+          in: "path"
+          required: true
+          description: The type of the data, usually 'City'.
+          schema:
+            $ref: '#/components/schemas/Type'
+        - name: "city_name"
+          in: "path"
+          required: true
+          schema:
+            $ref: '#/components/schemas/CityNames'
+        - name: "domain"
+          in: "path"
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChangeImpactDomains'
+        - name: "group"
+          in: "path"
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChangeImpactGroup'
+      responses:
+        "200":
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ChangeImpactEntry'
+                    - $ref: '#/components/schemas/Source'
+  /changeImpacts/{type}/{city_name}/{domain}/{group}/{options}:
+    get:
+      summary: Get potential impacts of lifestyle changes.
+      description: >
+        Retrieves detailed data on the potential impacts of various lifestyle change options for a specified city, domain, and group.
+      parameters:
+        - name: "type"
+          in: "path"
+          required: true
+          description: The type of the data, usually 'City'.
+          schema:
+            $ref: '#/components/schemas/Type'
+        - name: "city_name"
+          in: "path"
+          required: true
+          schema:
+            $ref: '#/components/schemas/CityNames'
+        - name: "domain"
+          in: "path"
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChangeImpactDomains'
+        - name: "group"
+          in: "path"
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChangeImpactGroup'
+        - name: "options"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: A successful response containing the potential impact data.
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ChangeImpactEntry'
+                    - $ref: '#/components/schemas/Source'
+  /calculates/{id}:
+    get:
+      summary: Get profile data by ID
+      description: Retrieve profile data including estimated carbon footprints.
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          description: Profile ID
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content: { }
+    put:
+      summary: Update profile data by ID
+      description: Update profile data and optionally recalculate carbon footprints.
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          description: Profile ID
+          schema:
+            type: "string"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileRequest'
+      responses:
+        "200":
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+  /calculates:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProfileRequest'
+      summary: Create new profile data
+      description: Create new profile data and optionally calculate carbon footprints.
+      responses:
+        "200":
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateProfileResponse'
+components:
+  schemas:
+    Type:
+      type: string
+      enum: [ City, Region, Metropolitan, Class, Country ]
+    CityNames:
+      type: string
+      enum: [ Akita, Aomori, Chiba, ChugokuReg., ChukyoMetro., Cities50000+pop., Fukui, Fukuoka, Fukushima, Gifu, Hamamatsu, Hiroshima, HokkaidoReg., HokurikuReg., Japan, Kagoshima, Kanazawa, KantoMetro., KantoReg., Kawasaki, KinkiMetro., KinkiReg., Kitakyushu, Kitakyushu/FukuokaMetro., Kobe, Kochi, Kofu, Kumamoto, Kyoto, KyushuReg., LargeCities, Maebashi, Matsue, Matsuyama, MiddleCities, Mito, Miyazaki, Morioka, Nagano, Nagasaki, Nagoya, Naha, Nara, Niigata, Oita, Okayama, OkinawaReg., Osaka, Otsu, Saga, Sagamihara, Saitama, Sakae, Sapporo, Sendai, ShikokuReg., Shizuoka, SmallB/Towns/Villages, SmallCitiesA, Takamatsu, TohokuReg., TokaiReg., Tokushima, Tokyo, Tottori, Toyama, Tsu, Utsunomiya, Wakayama, Yamagata, Yamaguchi, Yokohama ]
+    Domains:
+      type: string
+      enum: [ Housing, Mobility, Food, Goods, Leisure, Services ]
+    ChangeImpactDomains:
+      type: string
+      enum: [ Housing, Mobility, Food, Other ]
+    ChangeImpactGroup:
+      type: string
+      enum: [ Material Sufficiency, Durability and Repair, Decarbonized Leisure and Service, Seasonal and Local Food, Food Loss, Protein Shift, Dietary Shift, Energy Behavior, Appliances, Housing Sufficiency, Renewable Energy, Eco House, Compact City, Micro Leisure, Demand Reduction, Modal Shift, Vehicle Efficiency, Vehicle Sharing ]
+    Options:
+      type: string
+      enum: [ 'E-Books', 'Consumables Saving', 'Furniture Longer Use', 'Accessory Longer Use', 'Electronics Longer Use', 'Hobby Products Longer Use', 'Clothes Longer Use', 'Healthy Lifestyles', 'Eco Tourism', 'Community Recreation', 'Local Food', 'Seasonal Food', 'Food Loss Reduction', 'Pollotarian Diet', 'Pescatarian Diet', 'Alternative Meat', 'Food Guide Snacks/Drinks', 'Food Guide Meal', 'Vegetarian Diet', 'Vegan Diet', 'Energy Saving by Nudging', 'Warm/Cool Clothes', 'LED Lighting', 'Air Conditioner', 'Water Heat Pump', 'Compact House', 'Solar Water Heater', 'Renewable Grid Electricity', 'Rooftop Solar PV', 'Rooftop Solar PV (IH)', 'Window Insulation', 'Insulation Renovation', 'Nearly Zero Energy House', 'Zero Energy House', 'Life Cycle Carbon Minus House', 'Living Close to Services', 'Living Close to Workplace', 'Local Weekend', 'Domestic Vacation', 'Local Vacation', 'Less Frequent Shopping', 'Online Homecoming Visit', 'Teleworking', 'Taxi Trips', 'Domestic Flights', 'Long Distance Trips', 'Commuting Trips', 'In-city Private Trips', 'Eco Driving', 'Light Vehicle', 'Non-plug-in Hybrid Vehicle', 'Electric Vehicle', 'Plug-in Hybrid Vehicle', 'Plug-in Hybrid Vehicle (RE)', 'Electric Vehicle (RE)', 'Carsharing', 'Ridesharing' ]
+    CarbonFootprintData:
+      type: object
+      properties:
+        city_name:
+          type: string
+        CarbonFootprints:
+          type: number
+          format: float
+        No:
+          type: integer
+          format: int32
+        Domain:
+          type: string
+        Component:
+          type: string
+        English:
+          type: string
+        Japanese:
+          type: string
+        Type:
+          type: string
+    ChangeImpactEntry:
+      type: object
+      properties:
+        CityName:
+          type: string
+        Potential:
+          type: number
+          format: float
+        Domain:
+          type: string
+        Group:
+          type: string
+        Options:
+          type: string
+        Type:
+          type: string
+        Japanese:
+          type: string
+    Source:
+      type: object
+      properties:
+        source:
+          type: string
+          format: uri
+    CreateProfileRequest:
+      type: object
+      properties:
+        estimate:
+          type: boolean
+      required:
+        - estimate
+    CreateProfileResponse:
+      type: object
+      properties:
+        success:
+          type: string
+          example: "post call succeed!"
+        url:
+          type: string
+          example: "/calculates"
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "237220a7-0c0e-42ea-9879-243398f0222b"
+            baselines:
+              type: array
+              items:
+                type: object
+            estimations:
+              type: array
+              items:
+                type: object
+            mobilityScore:
+              type: array
+              items:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  value:
+                    type: number
+            foodScore:
+              type: array
+              items:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  value:
+                    type: number
+            housingScore:
+              type: array
+              items:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  value:
+                    type: number
+            otherScore:
+              type: array
+              items:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  value:
+                    type: number
+    ProfileRequest:
+      type: object
+      properties:
+        estimate:
+          type: boolean
+        mobilityAnswer:
+          type: object
+          properties:
+            carIntensityFactorFirstKey:
+              type: string
+              pattern: '^gasoline$|^light$|^hv$|^phv$|^ev$|^unknown$'
+            carChargingKey:
+              type: string
+              pattern: '^charge-almost-at-home$|^use-charging-spots-occasionally$|^use-charging-spots-sometimes$|^use-charging-spots-usually$|^unknown$'
+            carPassengersFirstKey:
+              type: string
+              pattern: '^1$|^1-2$|^2$|^2-3$|^3$|^3-4$|^4-more$|^unknown$'
+            mileageByAreaFirstKey:
+              type: string
+              pattern: '^major-city-or-metropolitan-area$|^city-150k-more$|^city-50k-150k$|^area-less-than-50k$|^unknown$'
+            hasPrivateCar:
+              type: boolean
+            privateCarAnnualMileage:
+              type: number
+              minimum: 0
+            trainWeeklyTravelingTime:
+              type: number
+              minimum: 0
+            busWeeklyTravelingTime:
+              type: number
+              minimum: 0
+            motorbikeWeeklyTravelingTime:
+              type: number
+              minimum: 0
+            otherCarWeeklyTravelingTime:
+              type: number
+              minimum: 0
+            hasTravelingTime:
+              type: boolean
+            otherCarAnnualTravelingTime:
+              type: number
+              minimum: 0
+            trainAnnualTravelingTime:
+              type: number
+              minimum: 0
+            busAnnualTravelingTime:
+              type: number
+              minimum: 0
+            motorbikeAnnualTravelingTime:
+              type: number
+              minimum: 0
+            airplaneAnnualTravelingTime:
+              type: number
+              minimum: 0
+            ferryAnnualTravelingTime:
+              type: number
+              minimum: 0
+        housingAnswer:
+          type: object
+          properties:
+            residentCount:
+              type: number
+              minimum: 1
+            electricityMonthlyConsumption:
+              type: number
+              minimum: 0
+            useGas:
+              type: boolean
+            gasMonthlyConsumption:
+              type: number
+              minimum: 0
+            useKerosene:
+              type: boolean
+            keroseneMonthlyConsumption:
+              type: number
+              minimum: 0
+            keroseneMonthCount:
+              type: number
+              minimum: 0
+            housingSizeKey:
+              type: string
+              pattern: '^1-room$|^2-room$|^3-room$|^4-room$|^5-6-room$|^7-more-room$|^unknown$'
+            housingInsulationFirstKey:
+              type: string
+              pattern: '^no-insulation$|^2-level$|^3-level$|^4-level$|^unknown$'
+            electricityIntensityKey:
+              type: string
+              pattern: '^conventional$|^30-renewable$|^50-renewable$|^100-renewable$|^solar-panel$|^unknown$'
+            electricitySeasonFactorKey:
+              type: string
+              pattern: '^january$|^february$|^march$|^april$|^may$|^june$|^july$|^august$|^september$|^october$|^november$|^december$'
+            energyHeatIntensityKey:
+              type: string
+              pattern: '^urban-gas$|^lpg$|^unknown$'
+            gasSeasonFactorKey:
+              type: string
+              pattern: '^january$|^february$|^march$|^april$|^may$|^june$|^july$|^august$|^september$|^october$|^november$|^december$'
+            housingAmountByRegionFirstKey:
+              type: string
+              pattern: '^northeast$|^middle$|^southwest$|^unknown$'
+        foodAnswer:
+          type: object
+          properties:
+            foodIntakeFactorKey:
+              type: string
+              pattern: '^very-little$|^somewhat-little$|^moderate$|^somewhat-much$|^very-much$|^unknown$'
+            foodDirectWasteFactorKey:
+              type: string
+              pattern: '^seldom$|^1-per-week$|^2-3-per-week$|^4-7-per-week$|^8-more-per-week$|^unknown$'
+            foodLeftoverFactorKey:
+              type: string
+              pattern: '^seldom$|^1-per-week$|^2-3-per-week$|^4-7-per-week$|^8-more-per-week$|^unknown$'
+            dishBeefFactorKey:
+              type: string
+              pattern: '^everyday$|^4-5-per-week$|^2-3-per-week$|^1-per-week$|^2-3-per-month$|^1-less-per-month$|^never$|^unknown$'
+            dishPorkFactorKey:
+              type: string
+              pattern: '^everyday$|^4-5-per-week$|^2-3-per-week$|^1-per-week$|^2-3-per-month$|^1-less-per-month$|^never$|^unknown$'
+            dishChickenFactorKey:
+              type: string
+              pattern: '^everyday$|^4-5-per-week$|^2-3-per-week$|^1-per-week$|^2-3-per-month$|^1-less-per-month$|^never$|^unknown$'
+            dishSeafoodFactorKey:
+              type: string
+              pattern: '^everyday$|^4-5-per-week$|^2-3-per-week$|^1-per-week$|^2-3-per-month$|^1-less-per-month$|^never$|^unknown$'
+            dairyFoodFactorKey:
+              type: string
+              pattern: '^3-more-per-day$|^2-per-day$|^1-per-day$|^half-of-week$|^1-2-less-per-week$|^never$|^unknown$'
+            alcoholFactorKey:
+              type: string
+              pattern: '^everyday$|^4-5-per-week$|^2-3-per-week$|^1-per-week$|^2-3-less-per-month$|^never$|^unknown$'
+            softDrinkSnackFactorKey:
+              type: string
+              pattern: '^3k-less$|^3k-5k$|^5k-10k$|^10k-15k$|^15k-more$|^unknown$'
+            eatOutFactorKey:
+              type: string
+              pattern: '^5k-less$|^5k-10k$|^10k-20k$|^20k-50k$|^50k-more$|^unknown$'
+        otherAnswer:
+          type: object
+          properties:
+            dailyGoodsAmountKey:
+              type: string
+              pattern: '^5k-less$|^5k-10k$|^10k-20k$|^20k-30k$|^30k-more$|^unknown$|^average-per-capita$'
+            communicationAmountKey:
+              type: string
+              pattern: '^5k-less$|^5k-10k$|^10k-20k$|^20k-30k$|^30k-more$|^unknown$|^average-per-capita$'
+            applianceFurnitureAmountKey:
+              type: string
+              pattern: '^50k-less$|^50k-100k$|^100k-200k$|^200k-300k$|^$|^300k-400k$|^400k-more$|^unknown$|^average-per-capita$'
+            serviceFactorKey:
+              type: string
+              pattern: '^5k-less$|^5k-10k$|^10k-20k$|^20k-50k$|^50k-more$|^unknown$'
+            hobbyGoodsFactorKey:
+              type: string
+              pattern: '^5k-less$|^5k-10k$|^10k-20k$|^20k-50k$|^50k-more$|^unknown$'
+            clothesBeautyFactorKey:
+              type: string
+              pattern: '^5k-less$|^5k-10k$|^10k-20k$|^20k-50k$|^50k-more$|^unknown$'
+            leisureSportsFactorKey:
+              type: string
+              pattern: '^5k-less$|^5k-10k$|^10k-20k$|^20k-50k$|^50k-more$|^unknown$'
+            travelFactorKey:
+              type: string
+              pattern: '^10k-less$|^10k-30k$|^30k-50k$|^50k-100k$|^100k-200k$|^200k-more$|^unknown$'
+      additionalProperties: false
+    ProfileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        mobilityAnswer:
+          type: object
+        housingAnswer:
+          type: object
+        foodAnswer:
+          type: object
+        otherAnswer:
+          type: object
+        baselines:
+          type: array
+          items:
+            type: object
+            properties:
+              domain:
+                type: string
+              item:
+                type: string
+              type:
+                type: string
+              value:
+                type: number
+              subdomain:
+                type: string
+              unit:
+                type: string
+        estimations:
+          type: array
+          items:
+            type: object
+            properties:
+              domain:
+                type: string
+              item:
+                type: string
+              type:
+                type: string
+              value:
+                type: number
+              subdomain:
+                type: string
+              unit:
+                type: string
+        mobilityScore:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: number
+        foodScore:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: number
+        housingScore:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: number
+        otherScore:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+

@@ -27,7 +27,7 @@ export class CalculateStack extends Stack {
         environment: {
           FOOTPRINT_TABLE_NAME: props.footprintTable.tableName,
           PARAMETER_TABLE_NAME: props.parameterTable.tableName,
-          PROFILE_TABLE_NAME: props.profileTable.tableName,
+          PROFILE_TABLE_NAME: props.profileTable.tableName
         },
         tracing: Tracing.ACTIVE,
         timeout: Duration.seconds(10)
