@@ -10,7 +10,7 @@
     "test": "jest",
     "cdk": "cdk",
     "lint": "npx eslint 'lib/**/*.ts'",
-    "lint:fix": "npx prettier --write 'lib/*.ts' && eslint --fix lib/*.ts"
+    "lint:fix": "npx prettier --write 'lib/**/*.ts' && eslint --fix lib/**/*.ts"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.0.2",

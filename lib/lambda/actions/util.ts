@@ -1,10 +1,22 @@
-const findBaseline = (baselines: any[], domain: string, item: string, type: string) => {
+const findBaseline = (
+  baselines: any[],
+  domain: string,
+  item: string,
+  type: string
+) => {
   return baselines.find(
     (bl) => bl.domain === domain && bl.item === item && bl.type === type
   )
 }
 
-const toEstimation = (baseline: { domain: any; item: any; type: any; value: any; subdomain: any; unit: any }) => {
+const toEstimation = (baseline: {
+  domain: any
+  item: any
+  type: any
+  value: any
+  subdomain: any
+  unit: any
+}) => {
   return {
     domain: baseline.domain,
     item: baseline.item,
@@ -15,7 +27,13 @@ const toEstimation = (baseline: { domain: any; item: any; type: any; value: any;
   }
 }
 
-const toBaseline = (rec: { dir_domain: string; item_type: string; value: any; subdomain: any; unit: any; }) => {
+const toBaseline = (rec: {
+  dir_domain: string
+  item_type: string
+  value: any
+  subdomain: any
+  unit: any
+}) => {
   const dir_domain = rec.dir_domain.split('_')
   const item_type = rec.item_type.split('_')
   return {

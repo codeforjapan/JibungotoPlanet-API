@@ -1,24 +1,29 @@
-import {findBaseline, toBaseline, toEstimation} from './util';
-import {DynamoDBDocumentClient, GetCommand, QueryCommand} from "@aws-sdk/lib-dynamodb";
+import { findBaseline, toBaseline, toEstimation } from './util'
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  QueryCommand
+} from '@aws-sdk/lib-dynamodb'
 
 const estimateOther = async (
-    dynamodb: DynamoDBDocumentClient,
-    housingAnswer: { residentCount: number | null | undefined },
-    otherAnswer: {
-      dailyGoodsAmountKey: any;
-      communicationAmountKey: any;
-      applianceFurnitureAmountKey: any;
-      serviceFactorKey: any;
-      hobbyGoodsFactorKey: any;
-      clothesBeautyFactorKey: any;
-      leisureSportsFactorKey: any;
-      travelFactorKey: any;
-    },
-    footprintTableName: string,
-    parameterTableName: string
+  dynamodb: DynamoDBDocumentClient,
+  housingAnswer: { residentCount: number | null | undefined },
+  otherAnswer: {
+    dailyGoodsAmountKey: any
+    communicationAmountKey: any
+    applianceFurnitureAmountKey: any
+    serviceFactorKey: any
+    hobbyGoodsFactorKey: any
+    clothesBeautyFactorKey: any
+    leisureSportsFactorKey: any
+    travelFactorKey: any
+  },
+  footprintTableName: string,
+  parameterTableName: string
 ) => {
   // foodのEstimationの取得
-  const createAmount = (baselines: any, item: string) => toEstimation(findBaseline(baselines, 'other', item, 'amount'));
+  const createAmount = (baselines: any, item: string) =>
+    toEstimation(findBaseline(baselines, 'other', item, 'amount'))
 
   // parameterの取得
   const getData = async (category: string, key: string) => {
@@ -28,11 +33,18 @@ const estimateOther = async (
         category: category,
         key: key
       }
-    };
-    return await dynamodb.send(new GetCommand(params));
-  };
+    }
+    return await dynamodb.send(new GetCommand(params))
+  }
 
-  const estimations: { domain: any; item: any; type: any; value: any; subdomain: any; unit: any }[] = [];
+  const estimations: {
+    domain: any
+    item: any
+    type: any
+    value: any
+    subdomain: any
+    unit: any
+  }[] = []
 
   // ベースラインのフットプリントを取得
   const params = {
@@ -41,25 +53,29 @@ const estimateOther = async (
     ExpressionAttributeValues: {
       ':dir_domain': 'baseline_other'
     }
-  };
+  }
 
-  const data = await dynamodb.send(new QueryCommand(params));
-  const baselines = data.Items?.map((item: any) => toBaseline(item));
+  const data = await dynamodb.send(new QueryCommand(params))
+  const baselines = data.Items?.map((item: any) => toBaseline(item))
 
   // 回答がない場合はベースラインのみ返す
   if (!otherAnswer) {
-    return { baselines, estimations };
+    return { baselines, estimations }
   }
 
   // 平均の居住人数を取得
-  let residentCount = 1;
-  const familySize = await getData('family-size', 'unknown');
+  let residentCount = 1
+  const familySize = await getData('family-size', 'unknown')
   if (familySize?.Item?.value) {
-    residentCount = familySize.Item.value;
+    residentCount = familySize.Item.value
   }
 
-  if (housingAnswer && housingAnswer.residentCount !== undefined && housingAnswer.residentCount !== null) {
-    residentCount = housingAnswer.residentCount;
+  if (
+    housingAnswer &&
+    housingAnswer.residentCount !== undefined &&
+    housingAnswer.residentCount !== null
+  ) {
+    residentCount = housingAnswer.residentCount
   }
 
   const answers = [
@@ -157,7 +173,12 @@ const estimateOther = async (
     {
       category: 'leisure-sports-factor',
       key: otherAnswer.leisureSportsFactorKey,
-      items: ['culture-leisure', 'entertainment-leisure', 'sports-leisure', 'bath-spa']
+      items: [
+        'culture-leisure',
+        'entertainment-leisure',
+        'sports-leisure',
+        'bath-spa'
+      ]
     },
 
     // 過去１年間の宿泊を伴う旅行にかかった費用はいくらくらいですか？
@@ -167,33 +188,33 @@ const estimateOther = async (
       key: otherAnswer.travelFactorKey,
       items: ['hotel', 'travel']
     }
-  ];
+  ]
 
   for (let ans of answers) {
     if (ans.key) {
-      const data = await getData(ans.category, ans.key);
-      let denominator: number | undefined = 1;
+      const data = await getData(ans.category, ans.key)
+      let denominator: number | undefined = 1
 
       if (ans.base) {
         if (ans.key === 'unknown') {
           // 国平均の支出額（average-per-capita）が指定されていて、わからない、の回答の場合は
           // 国平均に対する比率は1倍。denominatorをundefinedにして計算に使わないようにする。
-          denominator = undefined;
+          denominator = undefined
         } else {
-          const base = await getData(ans.category, ans.base);
+          const base = await getData(ans.category, ans.base)
           if (base?.Item?.value) {
             // 分母は国平均の支出額（average-per-capita） * 居住人数
-            denominator = base.Item.value * residentCount;
+            denominator = base.Item.value * residentCount
           }
         }
       }
 
       if (data?.Item?.value) {
-        const coefficient = denominator ? data.Item.value / denominator : 1;
+        const coefficient = denominator ? data.Item.value / denominator : 1
         for (let item of ans.items) {
-          const estimation = createAmount(baselines, item);
-          estimation.value *= coefficient;
-          estimations.push(estimation);
+          const estimation = createAmount(baselines, item)
+          estimation.value *= coefficient
+          estimations.push(estimation)
         }
       }
     }
@@ -221,36 +242,55 @@ const estimateOther = async (
     'kitchen-goods',
     'paper-stationery',
     'books-magazines'
-  ]);
+  ])
 
-  const isTarget = (t: { domain: any; item: any; type: any; value?: any; subdomain?: any; unit?: any }) =>
-      t.domain === 'other' && wasteSet.has(t.item) && t.type === 'amount';
+  const isTarget = (t: {
+    domain: any
+    item: any
+    type: any
+    value?: any
+    subdomain?: any
+    unit?: any
+  }) => t.domain === 'other' && wasteSet.has(t.item) && t.type === 'amount'
 
   // @ts-ignore
-  const targets = baselines.filter((b: { domain: any; item: any; type: any; value?: any; subdomain?: any; unit?: any }) => isTarget(b));
-  const results = new Map();
+  const targets = baselines.filter(
+    (b: {
+      domain: any
+      item: any
+      type: any
+      value?: any
+      subdomain?: any
+      unit?: any
+    }) => isTarget(b)
+  )
+  const results = new Map()
 
-  let baselineSum = 0;
+  let baselineSum = 0
   for (const baseline of targets) {
-    const key = baseline.domain + '_' + baseline.item + '_' + baseline.type;
-    results.set(key, toEstimation(baseline));
-    baselineSum += baseline.value;
+    const key = baseline.domain + '_' + baseline.item + '_' + baseline.type
+    results.set(key, toEstimation(baseline))
+    baselineSum += baseline.value
   }
 
   for (const estimation of estimations.filter((e) => isTarget(e))) {
-    const key = estimation.domain + '_' + estimation.item + '_' + estimation.type;
-    results.set(key, estimation);
+    const key =
+      estimation.domain + '_' + estimation.item + '_' + estimation.type
+    results.set(key, estimation)
   }
 
-  const estimationSum = Array.from(results.values()).reduce((sum, res) => sum + res.value, 0);
+  const estimationSum = Array.from(results.values()).reduce(
+    (sum, res) => sum + res.value,
+    0
+  )
 
-  const wasteEstimation = createAmount(baselines, 'waste');
+  const wasteEstimation = createAmount(baselines, 'waste')
   if (baselineSum !== 0) {
-    wasteEstimation.value *= estimationSum / baselineSum;
+    wasteEstimation.value *= estimationSum / baselineSum
   }
-  estimations.push(toEstimation(wasteEstimation));
+  estimations.push(toEstimation(wasteEstimation))
 
-  return { baselines, estimations };
-};
+  return { baselines, estimations }
+}
 
-export { estimateOther };
+export { estimateOther }
