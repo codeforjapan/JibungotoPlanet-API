@@ -1,4 +1,3 @@
-
 import { aws_dynamodb, RemovalPolicy, Stack } from 'aws-cdk-lib'
 import { Attribute, AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb'
 import { Construct } from 'constructs'
@@ -67,7 +66,7 @@ export class DynamodbStack extends Stack {
           name: 'Id',
           type: AttributeType.STRING
         }
-      },
+      }
     }
 
     for (const [key, tableObject] of Object.entries(tableObjects)) {
@@ -85,33 +84,28 @@ export class DynamodbStack extends Stack {
       )
     }
 
-
-    this.localFootprintTable.addGlobalSecondaryIndex(
-      {
-        indexName: 'CityName-Domain-index',
-        partitionKey: {
-          name: 'CityName',
-          type: AttributeType.STRING
-        },
-        sortKey: {
-          name: 'Domain',
-          type: AttributeType.STRING
-        }
+    this.localFootprintTable.addGlobalSecondaryIndex({
+      indexName: 'CityName-Domain-index',
+      partitionKey: {
+        name: 'CityName',
+        type: AttributeType.STRING
+      },
+      sortKey: {
+        name: 'Domain',
+        type: AttributeType.STRING
       }
-    )
+    })
 
-    this.changeImpactTable.addGlobalSecondaryIndex(
-      {
-        indexName: 'CityName-Domain-index',
-        partitionKey: {
-          name: 'CityName',
-          type: AttributeType.STRING
-        },
-        sortKey: {
-          name: 'Domain',
-          type: AttributeType.STRING
-        }
+    this.changeImpactTable.addGlobalSecondaryIndex({
+      indexName: 'CityName-Domain-index',
+      partitionKey: {
+        name: 'CityName',
+        type: AttributeType.STRING
+      },
+      sortKey: {
+        name: 'Domain',
+        type: AttributeType.STRING
       }
-    )
+    })
   }
 }

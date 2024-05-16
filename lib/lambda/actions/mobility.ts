@@ -1,9 +1,32 @@
-import { toBaseline, findBaseline, toEstimation } from './util'
+import { findBaseline, toBaseline, toEstimation } from './util'
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  QueryCommand
+} from '@aws-sdk/lib-dynamodb'
 
 const estimateMobility = async (
-  dynamodb: { get: (arg0: { TableName: any; Key: { category: any; key: any } }) => { (): any; new(): any; promise: { (): any; new(): any } }; query: (arg0: { TableName: any; KeyConditions: { dir_domain: { ComparisonOperator: string; AttributeValueList: string[] } } | { category: { ComparisonOperator: string; AttributeValueList: string[] } } | { category: { ComparisonOperator: string; AttributeValueList: string[] }; key: { ComparisonOperator: string; AttributeValueList: string[] } } }) => { (): any; new(): any; promise: { (): any; new(): any } } },
+  dynamodb: DynamoDBDocumentClient,
   housingAnswer: { electricityIntensityKey: any },
-  mobilityAnswer: { carChargingKey: any; hasPrivateCar: any; carIntensityFactorFirstKey: string; carPassengersFirstKey: string; privateCarAnnualMileage: number; hasTravelingTime: any; trainWeeklyTravelingTime: any; busWeeklyTravelingTime: any; motorbikeWeeklyTravelingTime: any; otherCarWeeklyTravelingTime: any; otherCarAnnualTravelingTime: any; trainAnnualTravelingTime: any; busAnnualTravelingTime: any; motorbikeAnnualTravelingTime: any; airplaneAnnualTravelingTime: any; ferryAnnualTravelingTime: any; mileageByAreaFirstKey: string },
+  mobilityAnswer: {
+    carChargingKey: any
+    hasPrivateCar: any
+    carIntensityFactorFirstKey: string
+    carPassengersFirstKey: string
+    privateCarAnnualMileage: number
+    hasTravelingTime: any
+    trainWeeklyTravelingTime: any
+    busWeeklyTravelingTime: any
+    motorbikeWeeklyTravelingTime: any
+    otherCarWeeklyTravelingTime: any
+    otherCarAnnualTravelingTime: any
+    trainAnnualTravelingTime: any
+    busAnnualTravelingTime: any
+    motorbikeAnnualTravelingTime: any
+    airplaneAnnualTravelingTime: any
+    ferryAnnualTravelingTime: any
+    mileageByAreaFirstKey: string
+  },
   footprintTableName: any,
   parameterTableName: any
 ) => {
@@ -13,20 +36,38 @@ const estimateMobility = async (
   const createIntensity = (baselines: any, item: string) =>
     toEstimation(findBaseline(baselines, 'mobility', item, 'intensity'))
 
-  const getData = async (category: string, key: string) =>
-    await dynamodb
-      .get({
-        TableName: parameterTableName,
-        Key: {
-          category: category,
-          key: key
-        }
-      })
-      .promise()
+  const getData = async (category: string, key: string) => {
+    const params = {
+      TableName: parameterTableName,
+      Key: {
+        category: category,
+        key: key
+      }
+    }
+    return await dynamodb.send(new GetCommand(params))
+  }
 
-  const estimations: { domain: any; item: any; type: any; value: any; subdomain: any; unit: any; }[] = []
+  const estimations: {
+    domain: any
+    item: any
+    type: any
+    value: any
+    subdomain: any
+    unit: any
+  }[] = []
 
-  const pushOrUpdateEstimate = (item: any, type: any, estimation: { domain?: any; item?: any; type?: any; value: any; subdomain?: any; unit?: any; }) => {
+  const pushOrUpdateEstimate = (
+    item: any,
+    type: any,
+    estimation: {
+      domain?: any
+      item?: any
+      type?: any
+      value: any
+      subdomain?: any
+      unit?: any
+    }
+  ) => {
     const estimate = estimations.find(
       (estimation) => estimation.item === item && estimation.type === type
     )
@@ -41,16 +82,14 @@ const estimateMobility = async (
   // ベースラインのフットプリントを取得
   let params = {
     TableName: footprintTableName,
-    KeyConditions: {
-      dir_domain: {
-        ComparisonOperator: 'EQ',
-        AttributeValueList: ['baseline_mobility']
-      }
+    KeyConditionExpression: 'dir_domain = :dir_domain',
+    ExpressionAttributeValues: {
+      ':dir_domain': 'baseline_mobility'
     }
   }
 
-  let data = await dynamodb.query(params).promise()
-  const baselines = data.Items.map((item: any) => toBaseline(item))
+  let data = await dynamodb.send(new QueryCommand(params))
+  const baselines = data.Items?.map((item: any) => toBaseline(item))
 
   // 回答がない場合はベースラインのみ返す
   if (!mobilityAnswer) {
@@ -294,7 +333,7 @@ const estimateMobility = async (
     }
 
     // 年間週数の取得
-    data = await getData('misc', 'weeks-per-year-excluding-long-vacations')
+    let data = await getData('misc', 'weeks-per-year-excluding-long-vacations')
     let weekCount = 49
     if (data?.Item) {
       weekCount = data.Item.value
@@ -303,37 +342,47 @@ const estimateMobility = async (
     // 時速の取得
     const paramsTransportation = {
       TableName: parameterTableName,
-      KeyConditions: {
-        category: {
-          ComparisonOperator: 'EQ',
-          AttributeValueList: ['transportation-speed']
-        }
+      KeyConditionExpression: 'category = :category',
+      ExpressionAttributeValues: {
+        ':category': 'transportation-speed'
       }
     }
-    data = await dynamodb.query(paramsTransportation).promise()
-    const speed = data.Items.reduce((a: { [x: string]: any; }, x: { key: string | number; value: any; }) => {
-      a[x.key] = x.value
-      return a
-    }, {})
+    data = await dynamodb.send(new QueryCommand(paramsTransportation))
+    // @ts-ignore
+    const speed = data.Items?.reduce(
+      (a: { [x: string]: any }, x: { key: string | number; value: any }) => {
+        a[x.key] = x.value
+        return a
+      },
+      {}
+    )
 
     // 飛行機の移動距離の積算
+    // @ts-ignore
     mileage.airplane += annualTravelingTime.airplane * speed['airplane-speed']
     // フェリーの移動距離の積算
+    // @ts-ignore
     mileage.ferry += annualTravelingTime.ferry * speed['ferry-speed']
 
     // 電車の移動距離の積算
     mileage.train +=
+      // @ts-ignore
       weeklyTravelingTime.train * weekCount * speed['train-speed'] +
+      // @ts-ignore
       annualTravelingTime.train * speed['long-distance-train-speed']
 
     // バスの移動距離の積算
     mileage.bus +=
+      // @ts-ignore
       weeklyTravelingTime.bus * weekCount * speed['bus-speed'] +
+      // @ts-ignore
       annualTravelingTime.bus * speed['express-bus-speed']
 
     // バイクの移動距離の積算
     mileage.motorbike +=
+      // @ts-ignore
       weeklyTravelingTime.motorbike * weekCount * speed['motorbike-speed'] +
+      // @ts-ignore
       annualTravelingTime.motorbike * speed['long-distance-motorbike-speed']
 
     const taxiRatio =
@@ -342,7 +391,9 @@ const estimateMobility = async (
 
     // タクシー他、その他の移動の算出
     const otherCarMileage =
+      // @ts-ignore
       weeklyTravelingTime.otherCar * weekCount * speed['car-speed'] +
+      // @ts-ignore
       annualTravelingTime.otherCar * speed['long-distance-car-speed']
 
     mileage.taxi += otherCarMileage * taxiRatio // タクシーの移動距離の積算
@@ -381,22 +432,26 @@ const estimateMobility = async (
       mobilityAnswer.mileageByAreaFirstKey || 'unknown'
     const params = {
       TableName: parameterTableName,
-      KeyConditions: {
-        category: {
-          ComparisonOperator: 'EQ',
-          AttributeValueList: ['mileage-by-area']
-        },
-        key: {
-          ComparisonOperator: 'BEGINS_WITH',
-          AttributeValueList: [mileageByAreaFirstKey + '_']
-        }
+      KeyConditionExpression:
+        'category = :category and begins_with(#key, :key)',
+      ExpressionAttributeNames: {
+        '#key': 'key'
+      },
+      ExpressionAttributeValues: {
+        ':category': 'mileage-by-area',
+        ':key': mileageByAreaFirstKey + '_'
       }
     }
-    const data = await dynamodb.query(params).promise()
-    const consumptionByArea = data.Items.reduce((a: { [x: string]: any; }, x: { key: string | number; value: any; }) => {
-      a[x.key] = x.value
-      return a
-    }, {})
+    const data = await dynamodb.send(new QueryCommand(params))
+    // @ts-ignore
+    const consumptionByArea = data.Items.reduce(
+      // @ts-ignore
+      (a: { [x: string]: any }, x: { key: string | number; value: any }) => {
+        a[x.key] = x.value
+        return a
+      },
+      {}
+    )
 
     estimationAmount.airplane.value =
       consumptionByArea[mileageByAreaFirstKey + '_airplane']

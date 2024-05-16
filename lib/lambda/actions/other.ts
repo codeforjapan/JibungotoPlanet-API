@@ -1,9 +1,23 @@
-import { toBaseline, findBaseline, toEstimation } from './util'
+import { findBaseline, toBaseline, toEstimation } from './util'
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  QueryCommand
+} from '@aws-sdk/lib-dynamodb'
 
 const estimateOther = async (
-  dynamodb: { get: (arg0: { TableName: any; Key: { category: any; key: any } }) => { (): any; new(): any; promise: { (): any; new(): any } }; query: (arg0: { TableName: any; KeyConditions: { dir_domain: { ComparisonOperator: string; AttributeValueList: string[] } } }) => { (): any; new(): any; promise: { (): any; new(): any } } },
+  dynamodb: DynamoDBDocumentClient,
   housingAnswer: { residentCount: number | null | undefined },
-  otherAnswer: { dailyGoodsAmountKey: any; communicationAmountKey: any; applianceFurnitureAmountKey: any; serviceFactorKey: any; hobbyGoodsFactorKey: any; clothesBeautyFactorKey: any; leisureSportsFactorKey: any; travelFactorKey: any },
+  otherAnswer: {
+    dailyGoodsAmountKey: any
+    communicationAmountKey: any
+    applianceFurnitureAmountKey: any
+    serviceFactorKey: any
+    hobbyGoodsFactorKey: any
+    clothesBeautyFactorKey: any
+    leisureSportsFactorKey: any
+    travelFactorKey: any
+  },
   footprintTableName: string,
   parameterTableName: string
 ) => {
@@ -12,32 +26,37 @@ const estimateOther = async (
     toEstimation(findBaseline(baselines, 'other', item, 'amount'))
 
   // parameterの取得
-  const getData = async (category: string, key: string) =>
-    await dynamodb
-      .get({
-        TableName: parameterTableName,
-        Key: {
-          category: category,
-          key: key
-        }
-      })
-      .promise()
+  const getData = async (category: string, key: string) => {
+    const params = {
+      TableName: parameterTableName,
+      Key: {
+        category: category,
+        key: key
+      }
+    }
+    return await dynamodb.send(new GetCommand(params))
+  }
 
-  const estimations: { domain: any; item: any; type: any; value: any; subdomain: any; unit: any; }[] = []
+  const estimations: {
+    domain: any
+    item: any
+    type: any
+    value: any
+    subdomain: any
+    unit: any
+  }[] = []
 
   // ベースラインのフットプリントを取得
   const params = {
     TableName: footprintTableName,
-    KeyConditions: {
-      dir_domain: {
-        ComparisonOperator: 'EQ',
-        AttributeValueList: ['baseline_other']
-      }
+    KeyConditionExpression: 'dir_domain = :dir_domain',
+    ExpressionAttributeValues: {
+      ':dir_domain': 'baseline_other'
     }
   }
 
-  const data = await dynamodb.query(params).promise()
-  const baselines = data.Items.map((item: any) => toBaseline(item))
+  const data = await dynamodb.send(new QueryCommand(params))
+  const baselines = data.Items?.map((item: any) => toBaseline(item))
 
   // 回答がない場合はベースラインのみ返す
   if (!otherAnswer) {
@@ -225,10 +244,26 @@ const estimateOther = async (
     'books-magazines'
   ])
 
-  const isTarget = (t: { domain: any; item: any; type: any; value?: any; subdomain?: any; unit?: any; }) =>
-    t.domain === 'other' && wasteSet.has(t.item) && t.type === 'amount'
+  const isTarget = (t: {
+    domain: any
+    item: any
+    type: any
+    value?: any
+    subdomain?: any
+    unit?: any
+  }) => t.domain === 'other' && wasteSet.has(t.item) && t.type === 'amount'
 
-  const targets = baselines.filter((b: { domain: any; item: any; type: any; value?: any; subdomain?: any; unit?: any; }) => isTarget(b))
+  // @ts-ignore
+  const targets = baselines.filter(
+    (b: {
+      domain: any
+      item: any
+      type: any
+      value?: any
+      subdomain?: any
+      unit?: any
+    }) => isTarget(b)
+  )
   const results = new Map()
 
   let baselineSum = 0

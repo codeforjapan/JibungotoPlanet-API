@@ -3,26 +3,30 @@ import { estimateMobility } from './actions/mobility'
 import { estimateHousing } from './actions/housing'
 import { estimateFood } from './actions/food'
 import { estimateOther } from './actions/other'
-
-const { DynamoDBDocument } = require('@aws-sdk/lib-dynamodb');
-const { DynamoDB } = require('@aws-sdk/client-dynamodb');
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand
+} from '@aws-sdk/lib-dynamodb'
 
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware')
 const bodyParser = require('body-parser')
 const { v4: uuid } = require('uuid')
 import express from 'express'
-import {EmissionCalculator} from "../../utils/emission";
+import { EmissionCalculator } from '../../utils/emission'
 
 const FOOTPRINT_TABLE_NAME = process.env.FOOTPRINT_TABLE_NAME || ''
 const PARAMETER_TABLE_NAME = process.env.PARAMETER_TABLE_NAME || ''
 const PROFILE_TABLE_NAME = process.env.PROFILE_TABLE_NAME || ''
 
-let dynamoParam = {}
-let footprintTableName = FOOTPRINT_TABLE_NAME
-let parameterTableName = PARAMETER_TABLE_NAME
-let profileTableName = PROFILE_TABLE_NAME
+const dynamoParam = {}
+const footprintTableName = FOOTPRINT_TABLE_NAME
+const parameterTableName = PARAMETER_TABLE_NAME
+const profileTableName = PROFILE_TABLE_NAME
 
-const dynamodb = DynamoDBDocument.from(new DynamoDB(dynamoParam))
+const dynamodbClient = new DynamoDBClient(dynamoParam)
+const dynamodb = DynamoDBDocumentClient.from(dynamodbClient)
 
 const path = '/calculates'
 
@@ -60,7 +64,7 @@ const toResponse = (profile: any, estimate: any) => {
         mobilityScore: profile.mobility,
         foodScore: profile.food,
         housingScore: profile.housing,
-        otherScore: profile.other,
+        otherScore: profile.other
       }
     : common
 }
@@ -70,24 +74,32 @@ const toResponse = (profile: any, estimate: any) => {
  *****************************************/
 app.get(path + '/:id', async (req: express.Request, res: express.Response) => {
   try {
-    const data = await dynamodb
-      .get({
+    const data = await dynamodb.send(
+      new GetCommand({
         TableName: profileTableName,
         Key: { id: req.params.id }
       })
+    )
 
     const profile = data.Item
+
+    if (profile == undefined) {
+      res.statusCode = 404
+      res.json({ error: 'Could not load item: ' + req.params.id })
+      return
+    }
 
     // 計算がされていない場合は遅延初期化
     if (!profile.estimated) {
       await updateProfile(dynamodb, profile)
       profile.estimated = true
       profile.updatedAt = new Date().toISOString()
-      await dynamodb
-        .put({
-          TableName: profileTableName,
+      await dynamodb.send(
+        new PutCommand({
+          TableName: PROFILE_TABLE_NAME,
           Item: profile
         })
+      )
     }
 
     await addScore(profile)
@@ -100,14 +112,17 @@ app.get(path + '/:id', async (req: express.Request, res: express.Response) => {
 })
 
 const addScore = async (profile: any) => {
-  const emissionCalculator = new EmissionCalculator(profile);
+  const emissionCalculator = new EmissionCalculator(profile)
   profile.mobility = emissionCalculator.mobility
   profile.food = emissionCalculator.food
   profile.housing = emissionCalculator.housing
   profile.other = emissionCalculator.other
 }
 
-const updateProfile = async (dynamodb: any, profile: any) => {
+const updateProfile = async (
+  dynamodb: DynamoDBDocumentClient,
+  profile: any
+) => {
   profile.baselines = []
   profile.estimations = []
 
@@ -170,12 +185,19 @@ app.put(path + '/:id', async (req: express.Request, res: express.Response) => {
 
   if (validate(req.body)) {
     try {
-      const data = await dynamodb
-        .get({
-          TableName: profileTableName,
+      const data = await dynamodb.send(
+        new GetCommand({
+          TableName: PROFILE_TABLE_NAME,
           Key: { id }
         })
+      )
       const profile = data.Item
+
+      if (profile == undefined) {
+        res.statusCode = 404
+        res.json({ error: 'Could not load item: ' + req.params.id })
+        return
+      }
 
       if (body.mobilityAnswer) {
         profile.mobilityAnswer = body.mobilityAnswer
@@ -198,11 +220,12 @@ app.put(path + '/:id', async (req: express.Request, res: express.Response) => {
         profile.estimated = true
       }
 
-      await dynamodb
-        .put({
+      await dynamodb.send(
+        new PutCommand({
           TableName: profileTableName,
           Item: profile
         })
+      )
 
       await addScore(profile)
       res.json({
@@ -210,9 +233,13 @@ app.put(path + '/:id', async (req: express.Request, res: express.Response) => {
         url: req.url,
         data: toResponse(profile, estimate)
       })
-    } catch (err) {
+    } catch (err: any) {
       res.statusCode = 500
-      res.json({ error: 'Could not load items: ' + err })
+      res.json({
+        error: 'Could not load items',
+        message: err.message,
+        stack: err.stack
+      })
     }
   } else {
     res.statusCode = 400
@@ -254,7 +281,7 @@ app.post(path, async (req: express.Request, res: express.Response) => {
         TableName: profileTableName,
         Item: profile
       }
-      await dynamodb.put(params)
+      await dynamodb.send(new PutCommand(params))
       await addScore(profile)
       res.json({
         success: 'post call succeed!',

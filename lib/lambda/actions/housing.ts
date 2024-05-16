@@ -1,24 +1,29 @@
-import { toBaseline, findBaseline, toEstimation } from './util'
+import { findBaseline, toBaseline, toEstimation } from './util'
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  QueryCommand
+} from '@aws-sdk/lib-dynamodb'
 
 const estimateHousing = async (
-  dynamodb: any,
+  dynamodb: DynamoDBDocumentClient,
   housingAnswer: any,
   mobilityAnswer: any,
-  footprintTableName: any,
-  parameterTableName: any
+  footprintTableName: string,
+  parameterTableName: string
 ) => {
-  const getData = async (category: any, key: any) =>
-    await dynamodb
-      .get({
-        TableName: parameterTableName,
-        Key: {
-          category: category,
-          key: key
-        }
-      })
-      .promise()
+  const getData = async (category: any, key: any) => {
+    const params = {
+      TableName: parameterTableName,
+      Key: {
+        category: category,
+        key: key
+      }
+    }
 
-  /* eslint-disable no-unused-vars */
+    return await dynamodb.send(new GetCommand(params))
+  }
+
   const pushOrUpdateEstimate = (item: any, type: any, estimation: any) => {
     const estimate = estimations.find(
       (estimation) => estimation.item === item && estimation.type === type
@@ -29,24 +34,31 @@ const estimateHousing = async (
       estimations.push(estimation)
     }
   }
-  /* eslint-disable no-unused-vars */
 
-  const estimations: { domain: any; item: any; type: any; value: any; subdomain: any; unit: any }[] = []
+  const estimations: {
+    domain: any
+    item: any
+    type: any
+    value: any
+    subdomain: any
+    unit: any
+  }[] = []
 
   // ベースラインのフットプリントを取得
   const params = {
     TableName: footprintTableName,
-    KeyConditions: {
-      dir_domain: {
-        ComparisonOperator: 'EQ',
-        AttributeValueList: ['baseline_housing']
-      }
+    KeyConditionExpression: 'dir_domain = :dir_domain',
+    ExpressionAttributeValues: {
+      ':dir_domain': 'baseline_housing'
     }
   }
 
-  const data = await dynamodb.query(params).promise()
-  const baselines = data.Items.map((item: any) => toBaseline(item))
+  const data = await dynamodb.send(new QueryCommand(params))
+  const baselines = data.Items?.map((item: any) => toBaseline(item))
 
+  if (baselines == undefined) {
+    return {}
+  }
   const findAmount = (item: string) =>
     findBaseline(baselines, 'housing', item, 'amount')
   const createAmount = (item: string) =>
@@ -87,23 +99,25 @@ const estimateHousing = async (
       housingAnswer.housingAmountByRegionFirstKey + '_'
     const params = {
       TableName: parameterTableName,
-      KeyConditions: {
-        category: {
-          ComparisonOperator: 'EQ',
-          AttributeValueList: ['housing-amount-by-region']
-        },
-        key: {
-          ComparisonOperator: 'BEGINS_WITH',
-          AttributeValueList: [housingAmountByRegion]
-        }
+      KeyConditionExpression:
+        'category = :category and begins_with(#key, :key)',
+      ExpressionAttributeNames: {
+        '#key': 'key'
+      },
+      ExpressionAttributeValues: {
+        ':category': 'housing-amount-by-region',
+        ':key': housingAmountByRegion
       }
     }
-    const amountByRegion = await dynamodb.query(params).promise()
+    const amountByRegion = await dynamodb.send(new QueryCommand(params))
 
     // estimationAmountに項目があるものだけ、amountByRegionの値を上書き
     for (const key of Object.keys(estimationAmount)) {
+      // @ts-ignore
       const rec = amountByRegion.Items.find(
-        (a: { key: string }) => a.key === housingAmountByRegion + key + '-amount'
+        // @ts-ignore
+        (a: { key: string }) =>
+          a.key === housingAmountByRegion + key + '-amount'
       )
       if (rec) {
         // @ts-ignore
@@ -200,7 +214,6 @@ const estimateHousing = async (
         'car-charging',
         mobilityAnswer.carChargingKey
       )
-
       const mobilityCharging = chargingData?.Item?.value || 1
       mobilityElectricityAmount =
         mobilityAnswer.privateCarAnnualMileage *
@@ -211,7 +224,7 @@ const estimateHousing = async (
     estimationAmount.electricity.value =
       (housingAnswer.electricityMonthlyConsumption *
         electricitySeason.Item?.value) /
-      residentCount -
+        residentCount -
       mobilityElectricityAmount
     pushOrUpdateEstimate('electricity', 'amount', estimationAmount.electricity)
   }
