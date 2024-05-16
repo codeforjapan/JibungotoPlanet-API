@@ -134,17 +134,17 @@ const estimateFood = async (
 
     // @ts-ignore
     const leftoverRatio = foodWasteRatioData.Items.find(
-    // @ts-ignore
+      // @ts-ignore
       (item: { key: string }) => item.key === 'leftover-per-food-waste'
     )
     // @ts-ignore
     const directWasteRatio = foodWasteRatioData?.Items.find(
-    // @ts-ignore
+      // @ts-ignore
       (item: { key: string }) => item.key === 'direct-waste-per-food-waste'
     )
     // @ts-ignore
     const foodWasteRatio = foodWasteRatioData?.Items.find(
-    // @ts-ignore
+      // @ts-ignore
       (item: { key: string }) => item.key === 'food-waste-per-food'
     )
 
@@ -364,7 +364,7 @@ const estimateFood = async (
         (beforeReadyMealKeyArray.reduce(
           (res, key) =>
             res +
-          // @ts-ignore
+            // @ts-ignore
             getCategoryCustomTotal(baselines, key, estimationAmount[key].value),
           0
         ) /
@@ -422,7 +422,7 @@ const estimateFood = async (
       )
       baseTotalAmount = EatOutArray.reduce(
         (res, key) =>
-        // @ts-ignore
+          // @ts-ignore
           res + findBaseline(baselines, 'food', key, 'amount').value,
         0
       )
@@ -434,7 +434,7 @@ const estimateFood = async (
               getCategoryCustomTotal(
                 baselines,
                 key,
-            // @ts-ignore
+                // @ts-ignore
                 estimationAmount[key].value
               )
             )

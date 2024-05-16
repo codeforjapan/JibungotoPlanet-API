@@ -445,7 +445,7 @@ const estimateMobility = async (
     const data = await dynamodb.send(new QueryCommand(params))
     // @ts-ignore
     const consumptionByArea = data.Items.reduce(
-    // @ts-ignore
+      // @ts-ignore
       (a: { [x: string]: any }, x: { key: string | number; value: any }) => {
         a[x.key] = x.value
         return a
