@@ -80,7 +80,7 @@ const estimateMobility = async (
   }
 
   // ベースラインのフットプリントを取得
-  let params = {
+  const params = {
     TableName: footprintTableName,
     KeyConditionExpression: 'dir_domain = :dir_domain',
     ExpressionAttributeValues: {
@@ -88,7 +88,7 @@ const estimateMobility = async (
     }
   }
 
-  let data = await dynamodb.send(new QueryCommand(params))
+  const data = await dynamodb.send(new QueryCommand(params))
   const baselines = data.Items?.map((item: any) => toBaseline(item))
 
   // 回答がない場合はベースラインのみ返す
@@ -158,7 +158,7 @@ const estimateMobility = async (
         (mobilityAnswer.carPassengersFirstKey || 'unknown') +
           '_private-car-factor'
       )
-      let passengerIntensityRatio = data?.Item?.value || 1
+      const passengerIntensityRatio = data?.Item?.value || 1
 
       const purchaseIntensity = createIntensity(
         baselines,
@@ -404,7 +404,7 @@ const estimateMobility = async (
     const baselineCarSharingAmount = estimationAmount.carSharing.value
 
     // ベースラインの値を書き換えてEstimationを生成
-    for (let item of Object.keys(mileage)) {
+    for (const item of Object.keys(mileage)) {
       // @ts-ignore
       estimationAmount[item].value = mileage[item]
       // @ts-ignore
@@ -488,10 +488,10 @@ const estimateMobility = async (
       consumptionByArea[mileageByAreaFirstKey + '_bicycle-maintenance']
 
     // ベースラインの値を書き換えてEstimationを生成
-    for (let amount of Object.values(estimationAmount)) {
+    for (const amount of Object.values(estimationAmount)) {
       pushOrUpdateEstimate(amount.item, amount.type, amount)
     }
-    for (let amount of Object.values(additionalAmount)) {
+    for (const amount of Object.values(additionalAmount)) {
       pushOrUpdateEstimate(amount.item, amount.type, amount)
     }
   }

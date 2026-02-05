@@ -190,7 +190,7 @@ const estimateOther = async (
     }
   ]
 
-  for (let ans of answers) {
+  for (const ans of answers) {
     if (ans.key) {
       const data = await getData(ans.category, ans.key)
       let denominator: number | undefined = 1
@@ -211,7 +211,7 @@ const estimateOther = async (
 
       if (data?.Item?.value) {
         const coefficient = denominator ? data.Item.value / denominator : 1
-        for (let item of ans.items) {
+        for (const item of ans.items) {
           const estimation = createAmount(baselines, item)
           estimation.value *= coefficient
           estimations.push(estimation)
