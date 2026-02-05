@@ -1,4 +1,5 @@
 openapi: "3.0.1"
+openapi: "3.0.1"
 info:
   title: "JibungotoPlanet-Api"
   version: "2024-03-11"
@@ -11,6 +12,8 @@ paths:
   /footprints/{type}:
     get:
       summary: Get a list of carbon footprint data for a specified type.
+      tags:
+        - footprints
       description: >
         Retrieves a list of carbon footprint entries based on the specified type.
         Each entry includes detailed data about the carbon footprints in different cities and domains.
@@ -45,6 +48,8 @@ paths:
   /footprints/{type}/{city_name}:
     get:
       summary: Get carbon footprint data for a specified city within a given type.
+      tags:
+        - footprints
       description: >
         Retrieves detailed carbon footprint data for a specific city within the given type. 
         This can include multiple entries depending on the city's available data.
@@ -84,6 +89,8 @@ paths:
   /footprints/{type}/{city_name}/{domain}:
     get:
       summary: Get carbon footprint data for a specific city and domain.
+      tags:
+        - footprints
       description: Retrieves the carbon footprint data for a specific component in a city, based on type, city name, and domain.
       parameters:
         - name: "type"
@@ -128,6 +135,8 @@ paths:
   /footprints/{type}/{city_name}/{domain}/{component}:
     get:
       summary: Get specific carbon footprint data for a city, domain, and component.
+      tags:
+        - footprints
       description: >
         Retrieves detailed carbon footprint data for a specific city within the given type, domain, and component.
         This endpoint allows for highly specific data queries.
@@ -177,6 +186,8 @@ paths:
   /changeImpacts/{type}:
     get:
       summary: Retrieve data based on type
+      tags:
+        - changeImpacts
       description: Retrieves lifestyle change data based on the specified type.
       parameters:
         - name: "type"
@@ -209,6 +220,8 @@ paths:
   /changeImpacts/{type}/{city_name}:
     get:
       summary: Retrieve data for a specified type and city
+      tags:
+        - changeImpacts
       description: Retrieves lifestyle change data based on the specified type and city.
       parameters:
         - name: "type"
@@ -246,6 +259,8 @@ paths:
   /changeImpacts/{type}/{city_name}/{domain}:
     get:
       summary: Retrieve data based on type, city, and domain
+      tags:
+        - changeImpacts
       description: Retrieves lifestyle change data based on the specified type, city, and domain.
       parameters:
         - name: "type"
@@ -288,6 +303,8 @@ paths:
   /changeImpacts/{type}/{city_name}/{domain}/{group}:
     get:
       summary: Retrieve data based on type, city, domain, and group
+      tags:
+        - changeImpacts
       description: Retrieves lifestyle change data based on the specified type, city, domain, and group.
       parameters:
         - name: "type"
@@ -335,6 +352,8 @@ paths:
   /changeImpacts/{type}/{city_name}/{domain}/{group}/{options}:
     get:
       summary: Get potential impacts of lifestyle changes.
+      tags:
+        - changeImpacts
       description: >
         Retrieves detailed data on the potential impacts of various lifestyle change options for a specified city, domain, and group.
       parameters:
@@ -388,6 +407,8 @@ paths:
   /calculates/{id}:
     get:
       summary: Get profile data by ID
+      tags:
+        - calculates
       description: Retrieve profile data including estimated carbon footprints.
       parameters:
         - name: "id"
@@ -412,6 +433,8 @@ paths:
           content: { }
     put:
       summary: Update profile data by ID
+      tags:
+        - calculates
       description: Update profile data and optionally recalculate carbon footprints.
       parameters:
         - name: "id"
@@ -445,6 +468,8 @@ paths:
                 $ref: '#/components/schemas/ProfileResponse'
   /calculates:
     post:
+      tags:
+        - calculates
       requestBody:
         required: true
         content:
@@ -606,8 +631,15 @@ components:
       properties:
         estimate:
           type: boolean
+          example: true
         mobilityAnswer:
           type: object
+          example:
+            hasPrivateCar: true
+            privateCarAnnualMileage: 10000
+            carIntensityFactorFirstKey: "gasoline"
+            trainWeeklyTravelingTime: 60
+            busWeeklyTravelingTime: 30
           properties:
             carIntensityFactorFirstKey:
               type: string
@@ -660,6 +692,12 @@ components:
               minimum: 0
         housingAnswer:
           type: object
+          example:
+            residentCount: 3
+            electricityMonthlyConsumption: 300
+            useGas: true
+            gasMonthlyConsumption: 20
+            housingSizeKey: "3-room"
           properties:
             residentCount:
               type: number
@@ -703,6 +741,12 @@ components:
               pattern: '^northeast$|^middle$|^southwest$|^unknown$'
         foodAnswer:
           type: object
+          example:
+            foodIntakeFactorKey: "moderate"
+            dishBeefFactorKey: "1-per-week"
+            dishPorkFactorKey: "2-3-per-week"
+            dishChickenFactorKey: "2-3-per-week"
+            dishSeafoodFactorKey: "2-3-per-week"
           properties:
             foodIntakeFactorKey:
               type: string
@@ -739,6 +783,11 @@ components:
               pattern: '^5k-less$|^5k-10k$|^10k-20k$|^20k-50k$|^50k-more$|^unknown$'
         otherAnswer:
           type: object
+          example:
+            dailyGoodsAmountKey: "10k-20k"
+            communicationAmountKey: "5k-10k"
+            clothesBeautyFactorKey: "5k-10k"
+            hobbyGoodsFactorKey: "5k-10k"
           properties:
             dailyGoodsAmountKey:
               type: string
