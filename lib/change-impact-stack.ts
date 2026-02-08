@@ -21,7 +21,7 @@ export class ChangeImpactStack extends Stack {
         functionName: `${props.stage}${props.serviceName}changeImpactLambda`,
         entry: path.join(__dirname, './lambda/citylifestylechangeimpacts.ts'),
         handler: 'handler',
-        runtime: Runtime.NODEJS_20_X,
+        runtime: Runtime.NODEJS_24_X,
         environment: {
           TABLE_NAME: props.dynamoTable.tableName
         },

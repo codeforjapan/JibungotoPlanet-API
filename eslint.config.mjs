@@ -30,6 +30,14 @@ export default [
         },
         rules: {
             '@typescript-eslint/no-unused-vars': 'off',
+            '@typescript-eslint/no-explicit-any': 'warn',
+            '@typescript-eslint/ban-ts-comment': ['warn', {
+                'ts-expect-error': 'allow-with-description',
+                'ts-ignore': true,
+                'ts-nocheck': true,
+                'ts-check': false,
+            }],
+            '@typescript-eslint/no-require-imports': 'warn',
         },
     },
 ];

@@ -23,7 +23,7 @@ export class CalculateStack extends Stack {
         functionName: `${props.stage}${props.serviceName}calculateLambda`,
         entry: path.join(__dirname, './lambda/calculate.ts'),
         handler: 'handler',
-        runtime: Runtime.NODEJS_20_X,
+        runtime: Runtime.NODEJS_24_X,
         environment: {
           FOOTPRINT_TABLE_NAME: props.footprintTable.tableName,
           PARAMETER_TABLE_NAME: props.parameterTable.tableName,
